@@ -1,16 +1,27 @@
-# daily_expense_tracker
+# Daily Expense Tracker
 
-A new Flutter project.
+Flutter app that integrates a public REST API (DummyJSON), parses JSON, and displays data in ListView.
 
-## Getting Started
+## Features
+- Fetches products/expenses from API
+- Shows list with title, amount, date
+- Loading & error states
+- Material 3 design
 
-This project is a starting point for a Flutter application.
+## API Used
+https://dummyjson.com/products
 
-A few resources to get you started if this is your first Flutter project:
+## How to run
+1. `flutter pub get`
+2. `flutter run`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Output Screenshots
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 1. Adding a new expense
+![Adding new expense](screenshots/adding-expense.png)
+
+### 2. Expense list after adding (with snackbar)
+![Expense added successfully](screenshots/after-add.png)
+
+### 3. Empty state (no expenses yet)
+![Empty state](screenshots/empty-state.png)
