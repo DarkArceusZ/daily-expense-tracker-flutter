@@ -15,13 +15,16 @@ https://dummyjson.com/products
 1. `flutter pub get`
 2. `flutter run`
 
-## Output Screenshots
+## 📱 Application Screenshots
 
-### 1. Adding a new expense
-![Adding new expense](adding-expense.png)
+### 🏠 Home Screen
+![Home](assets/screenshots/home.png)
 
-### 2. Expense list after adding (with snackbar)
-![Expense added successfully](after-add.png)
+### ➕ Add Expense
+![Add](assets/screenshots/add.png)
 
-### 3. Empty state (no expenses yet)
-![Empty state](empty-state.png)
+### ✏ Edit Expense
+![Edit](assets/screenshots/edit.png)
+
+### 🗑 Delete Expense
+![Delete](assets/screenshots/delete.png)
