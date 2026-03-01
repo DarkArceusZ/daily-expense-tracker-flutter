@@ -52,13 +52,13 @@ flutter run
 ## 📱 Application Screenshots
 
 ### 🏠 Home Screen
-![Home](assets/screenshots/home.png)
+![Home](./assets/screenshots/home.png)
 
 ### ➕ Add Expense
-![Add](assets/screenshots/add.png)
+![Add](./assets/screenshots/add.png)
 
 ### ✏ Edit Expense
-![Edit](assets/screenshots/edit.png)
+![Edit](./assets/screenshots/edit.png)
 
 ### 🗑 Delete Expense
-![Delete](assets/screenshots/delete.png)
+![Delete](./assets/screenshots/delete.png)
