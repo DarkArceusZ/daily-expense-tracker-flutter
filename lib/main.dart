@@ -37,6 +37,96 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  void _editExpense(int index) {
+    final expense = _expenses[index];
+
+    _titleController.text = expense.title;
+    _amountController.text = expense.amount.toString();
+    _selectedDate = expense.date;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Expense'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _amountController,
+                decoration: const InputDecoration(
+                  labelText: 'Amount (₹)',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Date: ${_selectedDate.toLocal().toString().split(' ')[0]}',
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _presentDatePicker,
+                    icon: const Icon(Icons.calendar_today),
+                    label: const Text('Change'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final updatedTitle = _titleController.text.trim();
+              final updatedAmount =
+              double.tryParse(_amountController.text.trim());
+
+              if (updatedTitle.isEmpty || updatedAmount == null) return;
+
+              setState(() {
+                _expenses[index] = Expense(
+                  id: expense.id, // keep same ID
+                  title: updatedTitle,
+                  amount: updatedAmount,
+                  date: _selectedDate,
+                );
+              });
+
+              _saveExpenses();
+
+              _titleController.clear();
+              _amountController.clear();
+              _selectedDate = DateTime.now();
+
+              Navigator.pop(ctx);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Expense updated')),
+              );
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
   bool _isLoading = false;
   List<Expense> _expenses = [];
   DateTime _selectedDate = DateTime.now();
@@ -205,14 +295,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        elevation: 4,
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
         title: const Text('Daily Expense Tracker'),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadExpenses,
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -221,21 +308,57 @@ class _HomeScreenState extends State<HomeScreen> {
           // Quick summary card
           Card(
             margin: const EdgeInsets.all(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'Today\'s expenses: ₹${totalToday.toStringAsFixed(2)}',
-                style: Theme.of(context).textTheme.titleMedium,
+            elevation: 6,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Colors.teal, Colors.green],
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Today's Spending",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '₹${totalToday.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           Expanded(
             child: _expenses.isEmpty
                 ? const Center(
-              child: Text(
-                'No expenses yet.\nTap + to add one!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.receipt_long, size: 80, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No expenses yet',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 6),
+                  Text(
+                    'Tap + to add your first expense',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
               ),
             )
                 : ListView.builder(
@@ -254,10 +377,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.only(right: 20),
                     child: const Icon(Icons.delete, color: Colors.white),
                   ),
-                  child: ListTile(
-                    title: Text(expense.title),
-                    trailing: Text('₹${expense.amount.toStringAsFixed(2)}'),
-                    subtitle: Text(expense.date.toLocal().toString().split(' ')[0]),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        expense.title,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        expense.date.toLocal().toString().split(' ')[0],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '₹${expense.amount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.teal),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => _editExpense(index),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               },
@@ -269,6 +418,10 @@ class _HomeScreenState extends State<HomeScreen> {
         label: const Text('Add'),
         icon: const Icon(Icons.add),
         onPressed: () {
+          _titleController.clear();
+          _amountController.clear();
+          _selectedDate = DateTime.now();
+
           showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
