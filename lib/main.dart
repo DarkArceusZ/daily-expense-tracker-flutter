@@ -1,8 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'services/database_helper.dart';
 import 'models/expense.dart'; // assuming this exists
 // import 'services/api_service.dart'; // comment out if not using real backend yet
 
@@ -93,23 +90,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final updatedTitle = _titleController.text.trim();
               final updatedAmount =
               double.tryParse(_amountController.text.trim());
 
               if (updatedTitle.isEmpty || updatedAmount == null) return;
 
-              setState(() {
-                _expenses[index] = Expense(
-                  id: expense.id, // keep same ID
-                  title: updatedTitle,
-                  amount: updatedAmount,
-                  date: _selectedDate,
-                );
-              });
+              final updatedExpense = Expense(
+                id: expense.id,
+                title: updatedTitle,
+                amount: updatedAmount,
+                date: _selectedDate,
+              );
 
-              _saveExpenses();
+              await DatabaseHelper.instance.updateExpense(updatedExpense);
+              await _loadExpenses();
 
               _titleController.clear();
               _amountController.clear();
@@ -151,20 +147,15 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? expensesJson = prefs.getString('expenses');
+      final expenses =
+      await DatabaseHelper.instance.getAllExpenses();
 
-      if (expensesJson != null && expensesJson.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(expensesJson);
+      if (mounted) {
         setState(() {
-          _expenses = decoded.map((e) => Expense.fromJson(e)).toList();
-          _expenses.sort((a, b) => b.date.compareTo(a.date)); // newest first
+          _expenses = expenses;
+          _expenses.sort((a, b) => b.date.compareTo(a.date));
         });
       }
-
-      // If you still want to try API fallback (optional)
-      // final apiExpenses = await ApiService.fetchExpenses();
-      // ... merge logic if needed
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -178,21 +169,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _saveExpenses() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonList = _expenses.map((e) => e.toJson()).toList();
-      await prefs.setString('expenses', jsonEncode(jsonList));
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e')),
-        );
-      }
-    }
-  }
 
-  void _addExpense() {
+  Future<void> _addExpense() async {
     final title = _titleController.text.trim();
     final amountText = _amountController.text.trim();
     final amount = double.tryParse(amountText);
@@ -218,17 +196,15 @@ class _HomeScreenState extends State<HomeScreen> {
       date: _selectedDate,
     );
 
-    setState(() {
-      _expenses.insert(0, newExpense); // add at top
-    });
-
-    _saveExpenses();
+    await DatabaseHelper.instance.insertExpense(newExpense);
+    await _loadExpenses();
 
     _titleController.clear();
     _amountController.clear();
-    _selectedDate = DateTime.now(); // reset date
+    _selectedDate = DateTime.now();
 
     Navigator.pop(context);
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Expense added')),
     );
@@ -241,7 +217,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Expense'),
-        content: Text('Are you sure you want to delete "${expense.title}"?'),
+        content: Text(
+            'Are you sure you want to delete "${expense.title}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -249,17 +226,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete',
+                style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
 
     if (confirmed == true) {
-      setState(() {
-        _expenses.removeAt(index);
-      });
-      await _saveExpenses();
+      await DatabaseHelper.instance.deleteExpense(expense.id);
+      await _loadExpenses();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Expense deleted')),
