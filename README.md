@@ -46,6 +46,7 @@ Data remains stored even after closing or restarting the app.
 ```bash
 flutter pub get
 flutter run
+```
 
 ---
 
@@ -61,4 +62,4 @@ flutter run
 ![Edit](assets/screenshots/edit.png)
 
 ### 🗑 Delete Expense
-![Delete](assets/screenshots/delete.png)v
+![Delete](assets/screenshots/delete.png)
